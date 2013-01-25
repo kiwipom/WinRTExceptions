@@ -84,8 +84,6 @@ namespace WinRTExceptions.Sample
                 ExceptionHandlingSynchronizationContext
                     .RegisterForFrame(rootFrame)
                     .UnhandledException += SynchronizationContext_UnhandledException;
-
-                await Test.LaunchAsync();
             }
 
             if (rootFrame.Content == null)
@@ -100,6 +98,8 @@ namespace WinRTExceptions.Sample
             }
             // Ensure the current window is active
             Window.Current.Activate();
+
+            await Test.LaunchAsync();
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
