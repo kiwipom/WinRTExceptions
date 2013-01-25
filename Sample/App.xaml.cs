@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -58,12 +62,8 @@ namespace WinRTExceptions.Sample
         /// search results, and so forth.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
-            // Start custom code
-            RegisterExceptionHandlingSynchronizationContext();
-            // End custom code
-
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -80,6 +80,12 @@ namespace WinRTExceptions.Sample
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
+
+                ExceptionHandlingSynchronizationContext
+                    .RegisterForFrame(rootFrame)
+                    .UnhandledException += SynchronizationContext_UnhandledException;
+
+                await Test.LaunchAsync();
             }
 
             if (rootFrame.Content == null)
@@ -116,6 +122,19 @@ namespace WinRTExceptions.Sample
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+    }
+
+    internal class Test
+    {
+        public static async Task LaunchAsync()
+        {
+            Debug.WriteLine("Before CreateFolderAsync: {0}", SynchronizationContext.Current);
+            await ApplicationData.Current.LocalFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
+            Debug.WriteLine("After CreateFolderAsync:{0}", SynchronizationContext.Current);
+
+            await Task.Yield();
+            Debug.WriteLine("After Task.Yield: {0}", SynchronizationContext.Current);
         }
     }
 }
